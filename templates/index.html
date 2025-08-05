@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real Traffic Generator</title>
+    <link href="https://cdn.jsdelivr.net/npm/[email protected]/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/[email protected]/css/all.min.css">
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-800 mb-4">
+                <i class="fas fa-chart-line text-blue-600"></i>
+                Real Traffic Generator
+            </h1>
+            <p class="text-gray-600">Generate organic traffic with real browser simulation</p>
+        </div>
+
+        <!-- Main Form -->
+        <div class="max-w-2xl mx-auto bg-white rounded-lg shadow-xl p-8">
+            <form id="trafficForm" class="space-y-6">
+                <!-- URL Input -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-globe text-blue-500"></i>
+                        Target Website URL
+                    </label>
+                    <input type="url" id="targetUrl" required 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           placeholder="https://example.com">
+                </div>
+
+                <!-- Visits Per Hour -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-clock text-green-500"></i>
+                        Visits Per Hour
+                    </label>
+                    <select id="visitsPerHour" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <option value="6">6 visits/hour (Slow)</option>
+                        <option value="12" selected>12 visits/hour (Normal)</option>
+                        <option value="24">24 visits/hour (Fast)</option>
+                        <option value="36">36 visits/hour (Very Fast)</option>
+                    </select>
+                </div>
+
+                <!-- Proxy Type -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-shield-alt text-purple-500"></i>
+                        Proxy Type
+                    </label>
+                    <select id="proxyType" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <option value="free">Free Proxies (Basic)</option>
+                        <option value="premium">Premium Proxies (Better)</option>
+                        <option value="datacenter">Datacenter Proxies (Fastest)</option>
+                    </select>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex space-x-4">
+                    <button type="submit" id="startBtn" 
+                            class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-medium transition duration-200">
+                        <i class="fas fa-play mr-2"></i>
+                        Start Traffic
+                    </button>
+                    <button type="button" id="stopBtn" 
+                            class="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 px-6 rounded-lg font-medium transition duration-200 opacity-50 cursor-not-allowed"
+                            disabled>
+                        <i class="fas fa-stop mr-2"></i>
+                        Stop Traffic
+                    </button>
+                </div>
+            </form>
+
+            <!-- Status Display -->
+            <div id="statusDiv" class="mt-6 p-4 rounded-lg hidden">
+                <p id="statusMessage" class="font-medium"></p>
+            </div>
+        </div>
+
+        <!-- Features -->
+        <div class="max-w-4xl mx-auto mt-12 grid md:grid-cols-3 gap-6">
+            <div class="bg-white p-6 rounded-lg shadow-lg text-center">
+                <i class="fas fa-robot text-4xl text-blue-600 mb-4"></i>
+                <h3 class="text-xl font-bold mb-2">Real User Behavior</h3>
+                <p class="text-gray-600">Scrolling, clicking, and waiting patterns like real users</p>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-lg text-center">
+                <i class="fas fa-mobile-alt text-4xl text-green-600 mb-4"></i>
+                <h3 class="text-xl font-bold mb-2">Device Rotation</h3>
+                <p class="text-gray-600">70% mobile and 30% desktop user agents</p>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-lg text-center">
+                <i class="fas fa-shield-alt text-4xl text-purple-600 mb-4"></i>
+                <h3 class="text-xl font-bold mb-2">Proxy Protection</h3>
+                <p class="text-gray-600">Multiple proxy types for anonymity and reliability</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('trafficForm');
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const statusDiv = document.getElementById('statusDiv');
+        const statusMessage = document.getElementById('statusMessage');
+
+        let currentUrl = '';
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const url = document.getElementById('targetUrl').value;
+            const visitsPerHour = document.getElementById('visitsPerHour').value;
+            const proxyType = document.getElementById('proxyType').value;
+
+            try {
+                startBtn.disabled = true;
+                startBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Starting...';
+
+                const response = await fetch('/start_traffic', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        url: url,
+                        visits_per_hour: parseInt(visitsPerHour),
+                        proxy_type: proxyType
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    currentUrl = url;
+                    showStatus(result.message, 'success');
+                    startBtn.disabled = true;
+                    startBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                    stopBtn.disabled = false;
+                    stopBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                } else {
+                    showStatus(result.message, 'error');
+                }
+            } catch (error) {
+                showStatus('Error starting traffic: ' + error.message, 'error');
+            } finally {
+                startBtn.disabled = false;
+                startBtn.innerHTML = '<i class="fas fa-play mr-2"></i>Start Traffic';
+            }
+        });
+
+        stopBtn.addEventListener('click', async () => {
+            if (!currentUrl) return;
+
+            try {
+                const response = await fetch('/stop_traffic', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        url: currentUrl
+                    })
+                });
+
+                const result = await response.json();
+                showStatus(result.message, result.success ? 'success' : 'error');
+
+                if (result.success) {
+                    currentUrl = '';
+                    startBtn.disabled = false;
+                    startBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    stopBtn.disabled = true;
+                    stopBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+            } catch (error) {
+                showStatus('Error stopping traffic: ' + error.message, 'error');
+            }
+        });
+
+        function showStatus(message, type) {
+            statusMessage.textContent = message;
+            statusDiv.className = `mt-6 p-4 rounded-lg ${type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`;
+            statusDiv.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
